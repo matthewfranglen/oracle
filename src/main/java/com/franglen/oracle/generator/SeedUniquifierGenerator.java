@@ -1,7 +1,7 @@
 package com.franglen.oracle.generator;
 
-import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.LongStream;
 
 /**
  * Generates the values that are used to salt the starting time for the Random
@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * 
  * @author matthew
  */
-public class SeedUniquifierGenerator implements Iterable<Long>, Iterator<Long> {
+public class SeedUniquifierGenerator implements Generator {
 
 	/**
 	 * Copied from seedUniquifier initialization in java.util.Random
@@ -27,17 +27,11 @@ public class SeedUniquifierGenerator implements Iterable<Long>, Iterator<Long> {
 	}
 
 	@Override
-	public Iterator<Long> iterator() {
-		return this;
+	public LongStream stream(long values) {
+		return LongStream.generate(this::next).limit(values);
 	}
 
-	@Override
-	public boolean hasNext() {
-		return true;
-	}
-
-	@Override
-	public Long next() {
+	private Long next() {
 		for (;;) {
 			long current = value.get();
 			long next = current * SEED_UNIQUIFIER_FACTOR;
