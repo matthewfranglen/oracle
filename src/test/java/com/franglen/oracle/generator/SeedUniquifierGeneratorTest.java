@@ -1,4 +1,4 @@
-package com.franglen.oracle;
+package com.franglen.oracle.generator;
 
 import static org.junit.Assert.assertEquals;
 

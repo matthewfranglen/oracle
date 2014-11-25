@@ -1,4 +1,4 @@
-package com.franglen.oracle;
+package com.franglen.oracle.generator;
 
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicLong;
