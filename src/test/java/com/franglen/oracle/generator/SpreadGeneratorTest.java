@@ -1,9 +1,13 @@
 package com.franglen.oracle.generator;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Random;
 import java.util.function.LongPredicate;
+import java.util.function.Supplier;
+import java.util.stream.LongStream;
+import java.util.stream.Stream;
 
 import org.junit.Test;
 
@@ -62,11 +66,54 @@ public class SpreadGeneratorTest {
 		}
 	}
 
-	public LongPredicate isEqualOrAbove(int start) {
+	@Test
+	public void testContendedCallsCount() {
+		long count = 10_000, length = 1;
+		LongStream contendedStream = createContendedSpreadGeneratorStream(count, length);
+
+		assertEquals(count * length, contendedStream.count());
+	}
+
+	@Test
+	public void testContendedCallsMinimum() {
+		long count = 10_000, length = 1, minimum = -count / 2;
+		LongStream contendedStream = createContendedSpreadGeneratorStream(count, length);
+
+		assertEquals(count * length, contendedStream.filter(isEqualOrAbove(minimum)).count());
+	}
+
+	@Test
+	public void testContendedCallsMaximum() {
+		long count = 10_000, length = 1, maximum = count / 2;
+		LongStream contendedStream = createContendedSpreadGeneratorStream(count, length);
+
+		assertEquals(count * length, contendedStream.filter(isEqualOrBelow(maximum)).count());
+	}
+
+	@Test
+	public void testContendedCallsTotal() {
+		long count = 10_000, length = 1;
+		LongStream contendedStream = createContendedSpreadGeneratorStream(count, length);
+		assertEquals(0, contendedStream.sum());
+	}
+
+	private LongPredicate isEqualOrAbove(long start) {
 		return (long value) -> value >= start;
 	}
 
-	public LongPredicate isEqualOrBelow(int start) {
+	private LongPredicate isEqualOrBelow(long start) {
 		return (long value) -> value <= start;
+	}
+
+	private LongStream createContendedSpreadGeneratorStream(long streamCount, long streamLength) {
+		SpreadGenerator generator = new SpreadGenerator(0);
+		Stream<LongStream> stream = Stream.generate(createStreamGenerator(generator, streamLength));
+		return stream.limit(streamCount).parallel().flatMapToLong((LongStream v) -> v);
+	}
+
+	private Supplier<LongStream> createStreamGenerator(SpreadGenerator generator, long length) {
+		return () -> {
+			return generator.stream(length);
+		};
 	}
 }
