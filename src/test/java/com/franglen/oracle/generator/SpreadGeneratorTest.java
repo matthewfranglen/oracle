@@ -4,8 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Random;
+import java.util.function.LongFunction;
 import java.util.function.LongPredicate;
-import java.util.function.Supplier;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
@@ -92,7 +92,8 @@ public class SpreadGeneratorTest {
 
 	@Test
 	public void testContendedCallsTotal() {
-		long count = 10_000, length = 1;
+		// The stream includes zero so it only totals zero when it has an odd number of elements
+		long count = 10_001, length = 1;
 		LongStream contendedStream = createContendedSpreadGeneratorStream(count, length);
 		assertEquals(0, contendedStream.sum());
 	}
@@ -107,12 +108,17 @@ public class SpreadGeneratorTest {
 
 	private LongStream createContendedSpreadGeneratorStream(long streamCount, long streamLength) {
 		SpreadGenerator generator = new SpreadGenerator(0);
-		Stream<LongStream> stream = Stream.generate(createStreamGenerator(generator, streamLength));
-		return stream.limit(streamCount).parallel().flatMapToLong((LongStream v) -> v);
+
+		// This creates a range which is mapped to ensure that only streamCount requests are made to the underlying generator.
+		// Applying the limit only prevents that many values passing the limit.
+		LongStream parallelBaseStream = LongStream.range(0, streamCount).parallel();
+		Stream<LongStream> streamOfLongStreams = parallelBaseStream.mapToObj(mapToLongStream(generator, streamLength));
+
+		return streamOfLongStreams.flatMapToLong((LongStream v) -> v);
 	}
 
-	private Supplier<LongStream> createStreamGenerator(SpreadGenerator generator, long length) {
-		return () -> {
+	private LongFunction<LongStream> mapToLongStream(SpreadGenerator generator, long length) {
+		return (long value) -> {
 			return generator.stream(length);
 		};
 	}
