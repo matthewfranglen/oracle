@@ -12,7 +12,7 @@ import java.util.stream.LongStream;
  */
 public class SpreadGenerator implements Generator {
 
-	private static enum DIRECTION {
+	static enum DIRECTION {
 		UP {
 
 			@Override

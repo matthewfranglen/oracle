@@ -95,7 +95,16 @@ public class SpreadGeneratorTest {
 		// The stream includes zero so it only totals zero when it has an odd number of elements
 		long count = 10_001, length = 1;
 		LongStream contendedStream = createContendedSpreadGeneratorStream(count, length);
+
 		assertEquals(0, contendedStream.sum());
+	}
+
+	@Test
+	public void testEnumValueOf() {
+		SpreadGenerator.DIRECTION expected = SpreadGenerator.DIRECTION.UP;
+		SpreadGenerator.DIRECTION actual = SpreadGenerator.DIRECTION.valueOf(expected.toString());
+
+		assertEquals(expected, actual);
 	}
 
 	private LongPredicate isEqualOrAbove(long start) {
